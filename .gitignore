@@ -54,3 +54,4 @@ node_modules
 /node_modules
 .vscode
 /config/sidekiq.yml
+yarn-error.log
