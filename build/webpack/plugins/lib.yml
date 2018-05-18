@@ -1,0 +1,66 @@
+# Note: You must restart bin/webpack-dev-server for changes to take effect
+
+default: &default
+  source: ../../../src/assets/libs/
+  js:
+    - jquery
+    - jquery_ujs
+    - turbolinks
+    - jquery.mixitup.min.js
+    - bootstrap.js
+    - nprogress
+    - nprogress-turbolinks
+    - sweet-alert.min
+    - qrcode
+    - sharings
+    - jquery.timeago
+    - dropzone.js
+    - init
+    - toggle
+    - upload
+    - jquery-migrate-1.2.1.min
+    - jquery.cookie
+    - jquery.velocity
+    - jquery-ui
+    - jquery.ui.touch-punch
+    - jquery.form.min
+    - jquery.iframe-transport
+    - jquery.fileupload
+    - rangy-core
+    - rangy-classapplier
+    - rangy-selectionsaverestore
+    - rangy-textrange
+    - jquery.Jcrop.min
+    - hammer
+    - jquery.adGallery.min
+    - lz-string.min
+    - highlight/highlight.pack
+    - hejiao.slide-deck
+    - jq.vb.plugins
+    - animations/animator0.js
+    - libs/plupload.full.min
+    - libs/qiniu.min
+    - hejiao.events
+    - hejiao.slide-options
+    - topbar
+    - jquery.dlmenu
+    - spectrum
+    - webfontloader
+    - katex.min
+    - auto-render.min
+    - pptConverter
+    - echarts/echarts.min
+    - horizontal-scroll
+    - popover
+    - GreenSockJS/src/minified/utils/Draggable.min.js
+    - GreenSockJS/src/minified/TweenMax.min.js
+    - html2canvas.js
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>
+      <%= @deck.title || '课件编辑' %>
+    </title>
+    <%= stylesheet_link_tag "edit", media: "all", "data-turbolinks-track" => true %>
+    <%= stylesheet_pack_tag  "editor/edit" %>
+    <script>
+      window.log = console.log.bind(console)
+      var HJ = HJ || {};
+      var isCloseReturn; //每保存一次，30秒后，关闭页面就会出提示。
+      HJ.host = "<%= Rails.configuration.hejiao.host %>";
+      HJ.apphost = "<%= Rails.configuration.hejiao.apphost %>";
+      HJ.deckUUID = '<%= @deck.uuid %>';
+      HJ.deckId = '<%= @deck.id %>';
+      HJ.pptConfig = <%=raw @deck.pptConfig %>;
+      HJ.userId = '<%= defined?(current_user) ? current_user.id : '1' %>';
+      HJ.color = '<%= @deck.color %>';
+      HJ.edit_at = '<%= Time.now.to_i %>';
+      HJ.isLockedForEdit = 'false';
+      HJ.lastEditUser = '<%= "demo@demo.com" %>';
+      HJ.lastEditDate = 'less than a minute';
+      HJ.unSavedDeck = 'False'.toLowerCase() === 'true';
+      HJ.backGround = '<%= @deck.background %>';
+      HJ.backImage = '<%= @theme.background.url(:large) %>';
+      HJ.resourcesId = '<%= @deck.category_id %>';
+      HJ.tree = <%=@deck.tree.blank? ? [] : raw(@deck.tree) %>
+      HJ.username = '<%= "demonickname" %>';
+      HJ.env = '<%= Rails.env %>';
+      HJ.title = '<%= @deck.title || '课件编辑' %>';
+      console.log(HJ)
+    </script>
+    <% if isClient && !isiPad %>
+      <style>
+        .isBrowser{
+            fill: #AAA;
+        }
+        .isBrowser:hover{
+            fill: #FFF;
+        }
+      </style>
+    <% else %>
+    <style>
+      #nprogress .spinner{right: 16px;}
+      .navbar-nav .isBrowser{display: none;}
+    </style>
+    <% end %>
+    <style>
+      #bg-box {
+        background: none;
+      }
+
+      #world .slide.pre-enter {
+        opacity: 0;
+      }
+
+      #world #slide-box .slide.pre-enter {
+        opacity: 0;
+      }
+
+      #world .slide.exit {
+        opacity: 0;
+      }
+
+      #world .slide:not(.exit) {}
+
+      #world .bg-layer.pre-enter {
+        opacity: 0;
+      }
+
+      #world .bg-layer.slide.exit {
+        opacity: 0;
+        /*-webkit-transition: all 0.5s linear 0;*/
+      }
+
+      .edit-option button,
+      .edit-option a,
+      .edit-option span,
+      .edit-option input {
+        -webkit-app-region: no-drag;
+      }
+
+      .play_control div,
+      .play_control a,
+      .play_control i {
+        -webkit-app-region: no-drag;
+      }
+
+      .MathJax_Display {
+        margin: 0;
+      }
+
+      .index-header button,
+      .index-header a,
+      .index-header span,
+      .index-header input {
+        -webkit-app-region: no-drag;
+      }
+
+      .play_control div,
+      .play_control a,
+      .play_control i {
+        -webkit-app-region: no-drag;
+      }
+    </style>
+    <link href="<%= @theme.style_url %>" data-theme-id='<%= @theme.uuid %>' type="text/css" rel="stylesheet" id="theme-css" />
+    <% unless @theme.wide %>
+      <style>
+        #bg-box {
+          width: 1200px;
+        }
+
+        .slide,
+        .edit-surface {
+          width: 1200px;
+        }
+
+        .v9 {
+          width: 120px;
+          min-width: 120px;
+        }
+
+        #world #slide-box,
+        #world .slide {
+          width: 1200px;
+        }
+      </style>
+    <% end %>
+    <script type="text/javascript">
+      String.prototype.trim=function(){return this.replace(/^\s+|\s+$/g, '');};
+      function getParameter(name) {
+          var value = new RegExp(name+"=([^&]*)","i").exec(window.location);
+          if (value!=null && value.length>1) {
+              value = decodeURIComponent(value[1].replace(/\+/g,' '));
+          } else {
+              value = null;
+          }
+          return value;
+      }
+      function insertHtml(content) {
+          if (content!=null && content.length>0) {
+              document.write(content);
+          }
+      }
+      function setValue(id, content) {
+          if (content!=null && content.length>0) {
+              document.getElementById(id).value = content;
+          }
+      }
+
+      var con = new XMLHttpRequest();
+      con.open("GET", "/generic_wiris/tech.txt", false);
+      con.send(null);
+      var s = con.responseText;
+      WIRISplugins_js = "/generic_wiris/integration/WIRISplugins.js";
+      tech = s.split("#")[0].trim();
+      window._wrs_int_path = window._wrs_int_path == null ? "" : window._wrs_int_path;
+      if (tech=="php") {
+          _wrs_int_conf_file_override = _wrs_int_path > 0 ?
+                                        _wrs_int_path + "/configurationjs.php" :
+                                        "/generic_wiris/integration/configurationjs.php";
+      } else if (tech=="aspx") {
+          _wrs_int_conf_file_override = _wrs_int_path > 0 ?
+                                        _wrs_int_path + "/configurationjs.aspx" :
+                                        "/generic_wiris/integration/configurationjs.aspx";
+      } else if (tech=="local-java") {
+          _wrs_int_conf_file_override = "/generic_wiris/app/configurationjs";
+      } else if (tech=="java") {
+          _wrs_int_conf_file_override = "/generic_wiris/pluginwiris_engineapp/configurationjs";
+      } else if (tech=="nodejs") {
+          _wrs_int_conf_file_override = "/generic_wiris/integration/configurationjs";
+          WIRISplugins_js = "/generic_wiris/integration/WIRISplugins.js";
+      }
+      var script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.src = WIRISplugins_js + "?viewer=image";
+      document.getElementsByTagName('head')[0].appendChild(script);
+
+      var content = getParameter("content");
+  </script>
+  <script type="text/javascript" src="/generic_wiris/core/display.js"></script>
+  <script type="text/javascript" src="/generic_wiris/wirisplugin-generic.js"></script>
+  </head>
+  <body>
+    <div id="loading">
+      <div class="loader">
+        <div class="loading loading-0"></div>
+        <div class="loading loading-1"></div>
+        <div class="loading loading-2"></div>
+      </div>
+    </div>
+    <%= render :partial => 'toolbar' %>
+    <div id="slidedeck" style="display:none;">
+      <xmp ng-non-bindable>
+        <%=raw @deck.slide.body %>
+      </xmp>
+    </div>
+
+    <!-- 动画设置弹窗 -->
+    <ul class="dropdown-menu" id="ani-effect-select" tabindex="10"></ul>
+    <!-- 插入公式弹窗 -->
+    <div class="modal fade" id="apps-modal" tabindex="-1" role="dialog" aria-labelledby="apps-modal" aria-hidden="true">
+      <div class="modal-dialog player-content" id="apps-content">
+        <div class="play_control">
+          <div class="player-close" id="apps-modal-close"><i class="icon-close-window"></i></div>
+        </div>
+        <iframe frameborder="0" id="apps-iframe" class="re_datail"></iframe>
+        <div class="modal-footer app-model-footer">
+          <button type="button" class="btn btn-primary btn-sm" id="apps-add-btn">插入</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 新建页面-->
+    <div class="new-page-container">
+      <div id="new-page-modal">
+        <div class="modal-header">
+          <h3>
+            <div id="dialog-form" title="新建页面">新建页面</div>
+          </h3>
+        </div>
+        <div class="modal-body">
+          <div class="ul-grade"></div>
+          <div class='ul-title'></div>
+          <div class="ul-content-default none">
+            <ul>
+              <li data-templateid='-1'>
+                <img src="" class="dark-bg" alt="">
+                <p>空白页面</p>
+              </li>
+              <li data-templateid='-1'>
+                <img src="" class='light-bg' alt="">
+                <p>空白页面</p>
+              </li>
+              <li data-templateid='-1' class='hasBg none'>
+                <img src="" alt="">
+                <p>空白页面</p>
+              </li>
+            </ul>
+          </div>
+          <div class="ul-content-template none"></div>
+        </div>
+      </div>
+      <div class="shadow"></div>
+    </div>
+    <!-- 新建表格的弹出层 -->
+    <div class="modal fade" id="new-table-modal" tabindex="-1" role="dialog" aria-labelledby="apps-modal" aria-hidden="true">
+      <div class="modal-dialog player-content" style="width:400px">
+        <div class="play_control">
+          <div class="player-close" id="table-modal-close"><i class="icon-close-window"></i></div>
+        </div>
+        <div class="modal-header">
+        <h3>
+          <div id="dialog-form" title="新建表格">新建表格</div>
+        </h3>
+        </div>
+        <div class="modal-body">
+          <div class="span12 input-group">
+            <span class="input-group-addon">行数</span>
+            <input class="form-control" type="number" name="table-rows" min="1"/>
+          </div>
+          <br/>
+          <div class="span12 input-group">
+            <span class="input-group-addon">列数</span>
+            <input class="form-control" type="number" name="table-cols" min="1"/>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary btn-sm" id="table-add-btn-new">插入</button>
+        </div>
+      </div>
+    </div>
+    <!-- table修改弹层 -->
+    <div id="modal-table-edit" style="width:120px;position:absolute;display:none;">
+      <ul>
+        <li id='add-bf-rows'>在上方插入行</li>
+        <li id='add-af-rows'>在下方插入行</li>
+        <li id='add-bf-cols'>在左侧插入列</li>
+        <li id='add-af-cols'>在右侧插入列</li>
+      </ul>
+      <ul>
+        <li id='delete-rows'>删除行</li>
+        <li id='delete-cols'>删除列</li>
+        <!--
+        <li id='delete-table'>删除表格</li>
+        -->
+      </ul>
+      <ul>
+        <li id='averages-height'>均分行高</li>
+        <li id='averages-width'>均分列宽</li>
+      </ul>
+      <ul>
+        <li id='merge-tr'>合并单元格</li>
+        <li id='split-tr'>取消合并</li>
+      </ul>
+
+    </div>
+    <!-- 图表编辑框 -->
+    <%= render :partial => 'chart' %>
+    <!-- 播放页弹出层 -->
+    <div class="modal fade" id="player-modal" tabindex="-1" role="dialog" aria-labelledby="player-modal" aria-hidden="true" style="background:rgba(46,50,51,1);">
+      <div class="modal-dialog player-content center-dialog" id="player-content">
+        <div class="play_control">
+          <div class="player-close" id="player-close"><i class="icon-close-window"></i></div>
+        </div>
+        <span id="player-modal-loading" style="position: absolute;">请稍候...</span>
+        <iframe id="player-iframe" src="" seamless webkitallowfullscreen mozallowfullscreen allowfullscreen frameborder="0"></iframe>
+      </div>
+    </div>
+    <!-- 录音弹出层 -->
+    <div class="modal fade" id="recording-modal" tabindex="-1" role="dialog" aria-labelledby="recording-modal" aria-hidden="true" style="background:rgba(46,50,51,1);">
+      <div class="modal-dialog player-content center-dialog" id="recording-content">
+        <div class="play_control">
+          <div class="player-close" id="recording-close"><i class="icon-close-window"></i></div>
+        </div>
+        <span id="recording-modal-loading" style="position: absolute;">请稍候...</span>
+        <iframe id="recording-iframe" src="" seamless webkitallowfullscreen mozallowfullscreen allowfullscreen frameborder="0"></iframe>
+      </div>
+    </div>
+    <!-- 分享 -->
+    <div class="modal fade" id="publish-modal" style="background:rgba(46,50,51,1);">
+      <div class="modal-dialog center-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">课程发布：</h4>
+          </div>
+          <div class="modal-body">
+            <!-- <ul id="" class="nav nav-tabs" role="tablist" style="margin-bottom:20px;">
+                    <li class="active"><a href="#privacy" id="privacy-btn" data-toggle="tab">发布权限</a></li>
+                    <li><a href="#share" id="share-btn" data-toggle="tab">发布</a></li>
+                </ul> -->
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 题库系统 -->
+    <div class="modal fade" id="qiuz-modal" style="background:rgba(46,50,51,1);">
+      <div class="modal-dialog center-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">题库系统:</h4>
+          </div>
+          <div class="modal-body">
+            sadfaf
+            </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">插入</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-edit-infobox keep-selection" id="btn-edit-infobox">
+      <div class="btn-edit-info" id="btn-edit-info">
+        <!-- 1.选择正确答案 -->
+      </div>
+      <div class="btn-edit-button">
+        <button type="button" class="btn btn-sm cancel" id="control-cancel">取消</button>
+        <button type="button" class="btn btn-sm btn-success" id="control-success">确定</button>
+      </div>
+    </div>
+    <input type="text" class="clipboard" value=" " id="copy-control" />
+    <input type="text" class="clipboard" value=" " id="paste-capture" />
+    <!-- begin loading jQuery plugin -->
+    <!--
+      <script src="/assets/jquery-1.11.0.js"            type="text/javascript"></script>
+      <script src="/assets/jquery-migrate-1.2.1.min.js" type="text/javascript"></script>
+      <script src="/assets/jquery.cookie.js"            type="text/javascript"></script>
+      <script src="/assets/jquery.velocity.js"          type="text/javascript"></script>
+      <script src="/assets/jquery-ui.js"                type="text/javascript"></script>
+      <script src="/assets/jquery.ui.touch-punch.js"    type="text/javascript"></script>
+      <script src="/assets/jquery.form.min.js"          type="text/javascript"></script>
+      <script src="/assets/jquery.iframe-transport.js"  type="text/javascript"></script>
+      <script src="/assets/jquery.Jcrop.min.js"         type="text/javascript"></script>
+      <script src="/assets/jquery.adGallery.min.js"     type="text/javascript"></script>
+      <script src="/assets/jquery.fileupload.js"        type="text/javascript"></script>
+      <script src="/assets/html2canvas.js"              type="text/javascript"></script>
+    -->
+    <!-- end loading jQuery plugin  -->
+
+    <%= javascript_include_tag "application", "edit-new", "data-turbolinks-track"=>true %>
+    <%= javascript_pack_tag  "editor/edit" %>
+
+    <%= render partial: '/shared/mathjax' %>
+
+  </body>
+</html>
