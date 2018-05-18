@@ -23,7 +23,6 @@ const setAttribute = exports.setAttribute = (dom, key, value) => {
 };
 
 const render = exports.render = (vdom, parent=null) => {
-    console.log(vdom, parent)
     if (parent) parent.textContent = '';
     const mount = parent ? (el => parent.appendChild(el)) : (el => el);
     if (typeof vdom == 'string' || typeof vdom == 'number') {
@@ -40,7 +39,8 @@ const render = exports.render = (vdom, parent=null) => {
             setAttribute(dom, prop, vdom.props[prop]);
         return mount(dom);
     } else {
-        throw new Error(`Invalid VDOM: ${vdom}.`);
+        // throw new Error(`Invalid VDOM: ${vdom}.`);
+        console.log(`Invalid VDOM: ${vdom}.`);
     }
 };
 
